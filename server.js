@@ -22,14 +22,14 @@ async function startServer() {
     app.use(express.json());
 
     // Servir arquivos estáticos da pasta /dist
-    app.use(express.static(path.join(__dirname, './dist')));
+    app.use('/movie', express.static(path.join(__dirname, './dist')));
 
     // Rotas de autenticação e API (assumindo que suas rotas estejam corretas)
     app.use('/auth', authRoutes(db));
     app.use('/api', apiRoutes(db));
 
     // Ao acessar a raiz, servir o index.html estático
-    app.get('/', (req, res) => {
+    app.get('/movie', (req, res) => {
         res.sendFile(path.join(__dirname, './dist/index.html'));
     });
 
