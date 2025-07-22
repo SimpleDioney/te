@@ -1,32 +1,29 @@
-// backend/server.js (VERSÃO FINAL E CORRETA)
-
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const initializeDatabase = require('./db/database');
 const authRoutes = require('./routes/auth');
 const apiRoutes = require('./routes/api');
+const adminRoutes = require('./routes/admin'); // Importa as rotas de admin
 
 const app = express();
 const port = 4586;
 
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
 
 async function startServer() {
-    const db = await initializeDatabase();
+  const db = await initializeDatabase();
 
-    // ---- ROTAS ----
-    app.use('/auth', authRoutes(db)); // Rotas de autenticação
-    app.use('/api', apiRoutes(db));   // Rotas da API de dados
+  // Rotas da API, autenticação e admin
+  app.use('/movie/auth', authRoutes(db));
+  app.use('/movie/api', apiRoutes(db));
+  app.use('/movie/admin', adminRoutes(db)); // Adiciona as rotas de admin
 
-    app.get('/', (req, res) => {
-        res.send('Servidor do MegaFlix com SQLite e Autenticação está no ar!');
-    });
-
-    app.listen(port, () => {
-        console.log(`Servidor backend final rodando em http://localhost:${port}`);
-    });
+  app.listen(port, () => {
+    console.log(`Servidor backend rodando em http://localhost:${port}`);
+  });
 }
 
 startServer();
