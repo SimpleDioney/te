@@ -91,34 +91,38 @@ module.exports = (db) => {
     });
     
     router.post('/reset-password', async (req, res) => {
-        const { token, password } = req.body;
-        if (!token || !password) {
-            return res.status(400).json({ message: 'Token e nova senha são obrigatórios.' });
-        }
+    // A única mudança é aqui: de 'password' para 'newPassword'
+    const { token, newPassword } = req.body; 
     
-        try {
-            const user = await db.get(
-                'SELECT * FROM users WHERE reset_password_token = ? AND reset_password_expires > ?',
-                [token, new Date()]
-            );
-    
-            if (!user) {
-                return res.status(400).json({ message: 'Token de redefinição de senha inválido ou expirado.' });
-            }
-    
-            const salt = await bcrypt.genSalt(10);
-            const password_hash = await bcrypt.hash(password, salt);
-    
-            await db.run(
-                'UPDATE users SET password_hash = ?, reset_password_token = NULL, reset_password_expires = NULL WHERE id = ?',
-                [password_hash, user.id]
-            );
-    
-            res.status(200).json({ message: 'Senha redefinida com sucesso.' });
-        } catch (error) {
-            res.status(500).json({ message: 'Erro ao redefinir a senha.', error: error.message });
-        }
-    });
+    // A verificação agora usa 'newPassword'
+    if (!token || !newPassword) {
+        return res.status(400).json({ message: 'Token e nova senha são obrigatórios.' });
+    }
 
-    return router;
+    try {
+        const user = await db.get(
+            'SELECT * FROM users WHERE reset_password_token = ? AND reset_password_expires > ?',
+            [token, new Date()]
+        );
+
+        if (!user) {
+            return res.status(400).json({ message: 'Token de redefinição de senha inválido ou expirado.' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        // A nova senha ('newPassword') é usada para criar o hash
+        const password_hash = await bcrypt.hash(newPassword, salt);
+
+        await db.run(
+            'UPDATE users SET password_hash = ?, reset_password_token = NULL, reset_password_expires = NULL WHERE id = ?',
+            [password_hash, user.id]
+        );
+
+        res.status(200).json({ message: 'Senha redefinida com sucesso.' });
+    } catch (error) {
+        res.status(500).json({ message: 'Erro ao redefinir a senha.', error: error.message });
+    }
+});
+
+return router;
 };
